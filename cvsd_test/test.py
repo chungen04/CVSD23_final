@@ -62,28 +62,33 @@ def read_in_hb(file_path):
 
 branches = [3, 2, 1, 1]
 
-r = read_in_r("PATTERN/packet4/SNR15dB_pat_r.dat")
-y_hat = read_in_y_hat("PATTERN/packet4/SNR15dB_pat_y_hat.dat")
-golden = read_in_hb("PATTERN/packet4/SNR15dB_hb.dat")
+r = read_in_r("PATTERN/packet1/SNR10dB_pat_r.dat")
+y_hat = read_in_y_hat("PATTERN/packet1/SNR10dB_pat_y_hat.dat")
+golden = read_in_hb("PATTERN/packet1/SNR10dB_hb.dat")
 
 # for i in y_hat:
 #     print(i[3])
 # exit()
 
 a = 1/(2**0.5)
-s_candidates = [complex(a, a), complex(-a, a), complex(a, -a), complex(-a, -a)]
+s_candidates = [complex(a, a), complex(a, -a), complex(-a, a), complex(-a, -a)]
 
 result = []
+acc = 0
 for i in range(len(r)): # 1000
     result.append([])
     # print(y_hat[i][3])
     for s in s_candidates:
         result[i].append(abs(y_hat[i][3] - r[i][0]*s))
-    result[i] = result[i].index(max(result[i]))
-
-acc = 1000
-for i in range(len(r)): # 1000
-    if(result[i] == bin2_to_int(golden[i][3])):
-        acc -= 1
-acc = acc / 10
-print(acc)
+    result[i] = result[i].index(min(result[i]))
+    if(result[i]!=bin2_to_int(golden[i][3])):
+        print("Testcase", i, "Error,", y_hat[i][3] ,"expect", bin2_to_int(golden[i][3]), "but find", result[i])
+    else:
+        acc += 1
+print("acc:", acc/10, "%")
+# acc = 1000
+# for i in range(len(r)): # 1000
+#     if(result[i] == bin2_to_int(golden[i][3])):
+#         acc -= 1
+# acc = acc / 10
+# print(acc)
