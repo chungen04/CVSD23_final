@@ -1,3 +1,4 @@
+import numpy as np
 def s316_to_dec(str):
     hex_value = int(str, 16)
 
@@ -60,11 +61,11 @@ def read_in_hb(file_path):
     lines = reshape_to_2d(lines, 4)
     return lines
 
-branches = [3, 2, 1, 1]
+branches = [4, 2, 1, 1]
 
-r = read_in_r("PATTERN/packet1/SNR10dB_pat_r.dat")
-y_hat = read_in_y_hat("PATTERN/packet1/SNR10dB_pat_y_hat.dat")
-golden = read_in_hb("PATTERN/packet1/SNR10dB_hb.dat")
+r = read_in_r("PATTERN/packet6/SNR15dB_pat_r.dat")
+y_hat = read_in_y_hat("PATTERN/packet6/SNR15dB_pat_y_hat.dat")
+golden = read_in_hb("PATTERN/packet6/SNR15dB_hb.dat")
 
 # for i in y_hat:
 #     print(i[3])
@@ -73,18 +74,74 @@ golden = read_in_hb("PATTERN/packet1/SNR10dB_hb.dat")
 a = 1/(2**0.5)
 s_candidates = [complex(a, a), complex(a, -a), complex(-a, a), complex(-a, -a)]
 
-result = []
 acc = 0
 for i in range(len(r)): # 1000
-    result.append([])
-    # print(y_hat[i][3])
-    for s in s_candidates:
-        result[i].append(abs(y_hat[i][3] - r[i][0]*s))
-    result[i] = result[i].index(min(result[i]))
-    if(result[i]!=bin2_to_int(golden[i][3])):
-        print("Testcase", i, "Error,", y_hat[i][3] ,"expect", bin2_to_int(golden[i][3]), "but find", result[i])
-    else:
+
+    scores = []
+    idx = ['0', '1', '2', '3']
+    for j in range(4):
+        scores.append((abs(y_hat[i][3] - r[i][0]*s_candidates[j]))**2)
+
+    # score = np.array(score)
+    # print(int(idx[0]))
+    # print(idx)
+    # print(scores)
+
+    idx2 = []
+    scores2 = []
+    for j in range(len(idx)):
+        tmp_score = []
+        tmp_idx = []
+        for k in range(4):
+            score = (abs(y_hat[i][2] - r[i][1]*s_candidates[int(idx[j][0])] - r[i][4]*s_candidates[k]))**2
+            tmp_score.append(scores[j]+score)
+            tmp_idx.append(idx[j]+str(k))
+        
+        idx2.extend(tmp_idx)
+        scores2.extend(tmp_score)
+
+    # print(idx2)
+    # print(scores2)
+
+    idx3 = []
+    scores3 = []
+    for j in range(len(idx2)):
+        tmp_score = []
+        tmp_idx = []
+        for k in range(4):
+            score = (abs(y_hat[i][1] - r[i][2]*s_candidates[int(idx2[j][0])] - r[i][5]*s_candidates[int(idx2[j][1])] - r[i][7]*s_candidates[k]))**2
+            tmp_score.append(scores2[j]+score)
+            tmp_idx.append(idx2[j]+str(k))
+        
+        idx3.extend(tmp_idx)
+        scores3.extend(tmp_score)
+
+    idx4 = []
+    scores4 = []
+    for j in range(len(idx3)):
+        tmp_score = []
+        tmp_idx = []
+        for k in range(4):
+            score = (abs(y_hat[i][0] - r[i][3]*s_candidates[int(idx3[j][0])] - r[i][6]*s_candidates[int(idx3[j][1])] - r[i][8]*s_candidates[int(idx3[j][2])] - r[i][9]*s_candidates[k]))**2
+            tmp_score.append(scores3[j]+score)
+            tmp_idx.append(idx3[j]+str(k))
+        
+        idx4.extend(tmp_idx)
+        scores4.extend(tmp_score)
+
+    min_idx = scores4.index(min(scores4))
+    ans = idx4[min_idx]
+    success = True
+    for j in range(4):
+        if int(ans[3-j]) != bin2_to_int(golden[i][j]):
+            success = False
+            break
+    if (success):
         acc += 1
+
+
+
+
 print("acc:", acc/10, "%")
 # acc = 1000
 # for i in range(len(r)): # 1000
